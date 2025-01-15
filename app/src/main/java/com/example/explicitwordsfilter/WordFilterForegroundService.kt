@@ -65,7 +65,7 @@ class WordFilterForegroundService : Service(), AccessibilityManager.Accessibilit
                 if (!isAccessibilityEnabled && !hasNotifiedAccessibilityOff) {
                     // Show notification to prompt the user if accessibility is disabled
                     showAccessibilityDisabledNotification()
-                    notifyFriend("accessibility_off", "The Accessibility Service has been disabled.")
+                    notifyFriend("accessibility_off", "Le Service d'accessibilité a été arreté (l'appareil n'est plus protégé!")
                     hasNotifiedAccessibilityOff = true
                 }
 
@@ -92,7 +92,7 @@ class WordFilterForegroundService : Service(), AccessibilityManager.Accessibilit
         if (!isAccessibilityEnabled) {
             // Prompt the user if accessibility is disabled
             showAccessibilityDisabledNotification()
-            notifyFriend("accessibility_off", "The Accessibility Service has been disabled.")
+            notifyFriend("accessibility_off", "Le Service d'accessibilité a été arreté (l'appareil n'est plus protégé!)")
         }
     }
 
@@ -191,16 +191,18 @@ class WordFilterForegroundService : Service(), AccessibilityManager.Accessibilit
         Log.d("WordFilterService", "Sending notification to $email for eventType: $eventType")
 
         try {
-            val url = "https://script.google.com/macros/s/AKfycbwZ66VzHDxsBG0NE4xdDcDAHT9U5-F5BcIu6B4RRDVB1G6NoCU8SyrYmxYJjM_F8MskMg/exec" // Replace with your script URL
+            val url = "https://script.google.com/macros/s/AKfycbzacPVyP_XiFlLqkh82ykZ2JveOvT06lLhVHnMNYaeeovphIFqJvDl605sMBHBJ6ro4OA/exec" // Replace with your script URL
 
             val json = JSONObject()
             json.put("secret", "bC7g5vK9pX2nT8rJ4qU1sL6fV0wE3hZ") // Same as in your Apps Script
             json.put("eventType", eventType)
             json.put("details", details)
-            json.put("recipient", email) // Add recipient email to JSON data
 
-            val recipients = listOf("3dbmodelling@gmail.com") // Replace with actual emails
+
+            val recipients = listOf(email)
             json.put("recipients", JSONArray(recipients))
+
+
             val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
 
             val request = Request.Builder()
@@ -240,7 +242,7 @@ class WordFilterForegroundService : Service(), AccessibilityManager.Accessibilit
 
         if (currentTime - lastRunTime > threshold && lastRunTime != 0L) {
             // Assume the app was force stopped
-            notifyFriend("app_force_stopped", "The app was force stopped or crashed.")
+            notifyFriend("app_force_stopped", "L'application a été arretée ou a crashée ")
         }
 
         // Update the timestamp

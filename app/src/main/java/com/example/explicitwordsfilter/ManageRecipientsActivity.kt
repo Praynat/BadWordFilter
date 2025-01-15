@@ -24,6 +24,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
@@ -129,41 +130,33 @@ fun saveEmailList(prefs: android.content.SharedPreferences, emailList: List<Stri
 }
 
 fun sendNotificationToEmail(context: Context, eventType: String, details: String, email: String) {
-    // Implement this function to send a notification to the specific email address
-    // You can use a similar approach as notifyFriend, but specify the recipient email
     val client = OkHttpClient()
+    val url = "https://script.google.com/macros/s/AKfycbzacPVyP_XiFlLqkh82ykZ2JveOvT06lLhVHnMNYaeeovphIFqJvDl605sMBHBJ6ro4OA/exec"
 
-    try {
-        val url = "https://script.google.com/macros/s/AKfycbwZ66VzHDxsBG0NE4xdDcDAHT9U5-F5BcIu6B4RRDVB1G6NoCU8SyrYmxYJjM_F8MskMg/exec"
+    val json = JSONObject()
+    json.put("secret", "bC7g5vK9pX2nT8rJ4qU1sL6fV0wE3hZ")
+    json.put("eventType", eventType)
+    json.put("details", details)
 
-        val json = JSONObject()
-        json.put("secret", "bC7g5vK9pX2nT8rJ4qU1sL6fV0wE3hZ")
-        json.put("eventType", eventType)
-        json.put("details", details)
-        json.put("recipient", email)
+    // Provide recipients as an array
+    val recipients = listOf(email)
+    json.put("recipients", JSONArray(recipients))
 
-        val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
+    val requestBody = json.toString().toRequestBody("application/json".toMediaTypeOrNull())
+    val request = Request.Builder().url(url).post(requestBody).build()
 
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e("ManageRecipients", "Failed to send notification", e)
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            Log.e("ManageRecipients", "Failed to send notification", e)
+        }
+        override fun onResponse(call: Call, response: Response) {
+            if (response.isSuccessful) {
+                Log.d("ManageRecipients", "Notification sent successfully")
+            } else {
+                Log.e("ManageRecipients", "Failed to send notification: ${response.code} - ${response.message}")
             }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    Log.d("ManageRecipients", "Notification sent successfully")
-                } else {
-                    Log.e("ManageRecipients", "Failed to send notification: ${response.code} - ${response.message}")
-                }
-                response.close()
-            }
-        })
-    } catch (e: Exception) {
-        Log.e("ManageRecipients", "Exception in sendNotificationToEmail", e)
-    }
+            response.close()
+        }
+    })
 }
+

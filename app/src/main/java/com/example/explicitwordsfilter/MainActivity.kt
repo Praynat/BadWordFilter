@@ -290,9 +290,22 @@ fun MainScreen(
                 Text(text = if (isFilterEnabled) "Filter Enabled" else "Filter Disabled")
             }
 
-            Text(text = "Word List", style = MaterialTheme.typography.headlineSmall)
-            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Websites List", style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(4.dp))
 
+            Button(
+                onClick = {
+                    val intent = Intent(context, ManageSiteListActivity::class.java)
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Manage Blocked Sites")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Words List", style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(8.dp))
             // Button to add words to block list (no password required)
             Button(
                 onClick = {

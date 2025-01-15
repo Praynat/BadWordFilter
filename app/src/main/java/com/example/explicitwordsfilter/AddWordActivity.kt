@@ -70,10 +70,10 @@ fun AddWordScreen() {
 }
 
 fun saveUserAddedWord(word: String, context: Context) {
-    val prefs = context.getSharedPreferences("ExplicitWordsPrefs", Context.MODE_PRIVATE)
+    val prefs = context.getSharedPreferences(SharedPrefsConstants.PREFS_NAME, Context.MODE_PRIVATE)
     val editor = prefs.edit()
-    val wordsSet = prefs.getStringSet("userWords", mutableSetOf()) ?: mutableSetOf()
+    val wordsSet = prefs.getStringSet(SharedPrefsConstants.USER_WORDS_KEY, mutableSetOf()) ?: mutableSetOf()
     wordsSet.add(word)
-    editor.putStringSet("userWords", wordsSet)
+    editor.putStringSet(SharedPrefsConstants.USER_WORDS_KEY, wordsSet)
     editor.apply()
 }

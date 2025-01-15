@@ -4,12 +4,15 @@ import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -27,6 +30,9 @@ class ManageWordListActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putStringSet("user_words", setOf("test1", "test2", "test3")).apply()
+
 
         setContent {
             ExplicitWordsFilterTheme {
@@ -94,8 +100,16 @@ fun PasswordEntryScreen(onPasswordEntered: (String) -> Unit) {
 
 @Composable
 fun ManageWordListScreen(activity: ComponentActivity) {
-    val prefs = LocalContext.current.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-    var wordList by remember { mutableStateOf(prefs.getStringSet("user_words", emptySet())?.toList() ?: listOf()) }
+    val prefs = activity.getSharedPreferences(SharedPrefsConstants.PREFS_NAME, Context.MODE_PRIVATE)
+    var wordList by remember {
+        mutableStateOf(
+            prefs.getStringSet(SharedPrefsConstants.USER_WORDS_KEY, emptySet())?.toList() ?: listOf()
+        )
+    }
+
+    // State for editing
+    var editingWord by remember { mutableStateOf<String?>(null) }
+    var editedWord by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -120,22 +134,60 @@ fun ManageWordListScreen(activity: ComponentActivity) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = word)
+                // If editing, show the input field
+                if (editingWord == word) {
+                    OutlinedTextField(
+                        value = editedWord,
+                        onValueChange = { editedWord = it },
+                        label = { Text("Edit word") },
+                        modifier = Modifier.weight(1f)
+                    )
 
-                Row {
-                    // Edit button (optional)
-                    IconButton(onClick = {
-                        // Implement edit functionality here
-                    }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    Row {
+                        // Save button
+                        IconButton(onClick = {
+                            if (editedWord.isNotBlank()) {
+                                val updatedList = wordList.toMutableList()
+                                updatedList.remove(word)
+                                updatedList.add(editedWord)
+                                wordList = updatedList
+                                saveWordList(prefs, updatedList)
+                                editingWord = null // Reset editing state
+                                editedWord = "" // Clear edited word
+                            }
+                        }) {
+                            Icon(Icons.Default.Check, contentDescription = "Save")
+                        }
+
+                        // Cancel button
+                        IconButton(onClick = {
+                            editingWord = null // Reset editing state
+                            editedWord = "" // Clear edited word
+                        }) {
+                            Icon(Icons.Default.Close, contentDescription = "Cancel")
+                        }
                     }
+                } else {
+                    // Normal view of word
+                    Text(text = word, modifier = Modifier.weight(1f))
 
-                    // Delete button
-                    IconButton(onClick = {
-                        wordList = wordList - word
-                        saveWordList(prefs, wordList)
-                    }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    Row {
+                        // Edit button
+                        IconButton(onClick = {
+                            editingWord = word // Set the word being edited
+                            editedWord = word // Set the initial value to the current word
+                        }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        }
+
+                        // Delete button
+                        IconButton(onClick = {
+                            val updatedList = wordList - word
+                            wordList = updatedList
+                            saveWordList(prefs, updatedList)
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        }
                     }
                 }
             }
@@ -144,6 +196,8 @@ fun ManageWordListScreen(activity: ComponentActivity) {
     }
 }
 
+
 fun saveWordList(prefs: SharedPreferences, wordList: List<String>) {
-    prefs.edit().putStringSet("user_words", wordList.toSet()).apply()
+    prefs.edit().putStringSet(SharedPrefsConstants.USER_WORDS_KEY, wordList.toSet()).apply()
 }
+
